@@ -12,8 +12,8 @@ This guide explains how to deploy the Financial Analysis Toolkit for Chinese A-S
 
 1. Go to https://github.com and log in to your account
 2. Click the "+" icon in the upper right corner and select "New repository"
-3. Set the repository name to `chinese-stock-analysis-toolkit`
-4. Add a description: "A specialized toolkit for Chinese A-share financial data analysis with smart caching and standardized analysis capabilities"
+3. Set the repository name to `Nexus-caiwu-agent`
+4. Add a description: "Nexus财务智能体 - 专为A股市场设计的智能财务分析系统"
 5. Choose Public (or Private if you prefer)
 6. Do NOT initialize with a README
 7. Click "Create repository"
@@ -23,12 +23,12 @@ This guide explains how to deploy the Financial Analysis Toolkit for Chinese A-S
 1. Open a terminal/command prompt
 2. Navigate to the project directory:
    ```bash
-   cd d:\youtu-agent\financial_analysis_project
+   cd d:\caiwu-agent
    ```
 
 3. Add the remote origin (replace `your-username` with your GitHub username):
    ```bash
-   git remote add origin https://github.com/your-username/chinese-stock-analysis-toolkit.git
+   git remote add origin https://github.com/hhhh124hhhh/Nexus-caiwu-agent.git
    ```
 
 ## Step 3: Push to GitHub
@@ -58,7 +58,7 @@ If you don't have a personal access token:
 
 After pushing, you should be able to see your code at:
 ```
-https://github.com/your-username/chinese-stock-analysis-toolkit
+https://github.com/hhhh124hhhh/Nexus-caiwu-agent
 ```
 
 ## Installing Dependencies
@@ -102,7 +102,7 @@ python tests/test_analyzer.py
 ## Project Structure
 
 ```
-chinese-stock-analysis-toolkit/
+Nexus-caiwu-agent/
 ├── financial_tools/
 │   ├── akshare_financial_tool.py      # Financial data acquisition
 │   ├── financial_analysis_toolkit.py   # Financial analysis toolkit

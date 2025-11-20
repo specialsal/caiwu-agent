@@ -328,7 +328,7 @@ utu 包已安装
 
 ### 1. 环境准备
 ```bash
-git clone https://github.com/hhhh124hhhh/caiwu-agent.git
+git clone https://github.com/hhhh124hhhh/Nexus-caiwu-agent.git
 cd caiwu-agent
 make sync
 source .venv/bin/activate  # Linux/Mac

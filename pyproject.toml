@@ -1,7 +1,7 @@
 [project]
-name = "Youtu-agent"
+name = "Nexus-caiwu-agent"
 version = "0.1.0"
-description = "Youtu-Agent is a simple but powerful framework for building, running, and evaluating agents."
+description = "Nexus财务智能体是专为A股市场设计的智能财务分析系统"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

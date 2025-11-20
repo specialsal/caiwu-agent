@@ -41,8 +41,8 @@ git remote -v
 
 应该显示类似以下的输出：
 ```
-origin    https://github.com/hhhh124hhhh/caiwu-agent.git (fetch)
-origin    https://github.com/hhhh124hhhh/caiwu-agent.git (push)
+origin    https://github.com/hhhh124hhhh/Nexus-caiwu-agent.git (fetch)
+origin    https://github.com/hhhh124hhhh/Nexus-caiwu-agent.git (push)
 upstream  https://github.com/TencentCloudADP/youtu-agent.git (fetch)
 upstream  https://github.com/TencentCloudADP/youtu-agent.git (push)
 ```

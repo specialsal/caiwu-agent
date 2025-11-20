@@ -2,16 +2,15 @@
   "stocks": {
     "stock_600248": {
       "stock_code": "600248",
-      "cached_date": "2025-10-25T16:39:07.312186",
-      "latest_report_date": "2025-06-30",
+      "cached_date": "2025-11-20T20:16:49.027118",
+      "latest_report_date": "",
       "data_types": [
-        "income",
         "balance",
         "cashflow",
         "metrics",
         "trend"
       ],
-      "file_count": 5
+      "file_count": 4
     },
     "stock_000858": {
       "stock_code": "000858",

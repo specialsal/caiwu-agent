@@ -52,7 +52,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/hhhh124hhhh/caiwu-agent.git
+git clone https://github.com/hhhh124hhhh/Nexus-caiwu-agent.git
 cd caiwu-agent
 
 # 安装依赖

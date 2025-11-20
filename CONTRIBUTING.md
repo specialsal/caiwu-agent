@@ -1,6 +1,6 @@
 # How to Contribute
 
-First off, thank you for considering contributing to Youtu-Agent 财务分析智能体! It's people like you that make our community and software better. We welcome any and all contributions.
+First off, thank you for considering contributing to Nexus财务智能体! It's people like you that make our community and software better. We welcome any and all contributions.
 
 We use GitHub [pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) to accept contributions.
 
@@ -23,8 +23,8 @@ For a complete guide on setting up your development environment, please refer to
 
 ```sh
 # 克隆项目
-git clone <repository-url>
-cd youtu-agent
+git clone https://github.com/hhhh124hhhh/Nexus-caiwu-agent.git
+cd Nexus-caiwu-agent
 
 # 安装依赖
 uv sync --all-extras --all-packages --group dev

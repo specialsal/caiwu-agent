@@ -1,4 +1,4 @@
-# Youtu-Agent 财务分析智能体
+# Nexus财务智能体
 
 基于 Youtu-Agent 框架构建的智能财务分析系统，专为A股市场设计。通过标准化工具库和智能缓存机制，提供稳定、高效的财务数据分析能力，彻底解决AI代码生成的错误和token消耗问题。
 
@@ -40,8 +40,8 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/hhhh124hhhh/caiwu-agent
-cd youtu-agent
+git clone https://github.com/hhhh124hhhh/Nexus-caiwu-agent
+cd Nexus-caiwu-agent
 
 # 安装依赖
 uv sync --all-extras --all-packages --group dev
@@ -87,7 +87,7 @@ uv run examples/stock_analysis/main_web.py
 ## 📁 项目架构
 
 ```
-youtu-agent/
+Nexus-caiwu-agent/
 ├── utu/
 │   ├── tools/
 │   │   ├── akshare_financial_tool.py          # AKShare数据获取工具（智能缓存）
@@ -427,7 +427,6 @@ recommendations = health['recommendations']
 ## 🙏 致谢
 
 - [AKShare](https://github.com/akfamily/akshare) - 优秀的金融数据源
-- [Youtu-Agent](https://github.com/TencentCloudADP/youtu-agent) - 强大的智能体框架
 - [Pandas](https://pandas.pydata.org/) - 数据处理利器
 - [Matplotlib](https://matplotlib.org/) & [Seaborn](https://seaborn.pydata.org/) - 数据可视化
 
@@ -500,3 +499,30 @@ uv run scripts/cli_chat.py --stream --config_name agents/examples/stock_analysis
 ReportAgent现在集成了report_saver工具，可以将AI生成的最终分析结果保存到文件中，解决了之前财务分析工具中只能保存单一企业财务报告的问题。
 
 这些改进使得系统既能够提供详细的分析过程展示，又能够保持简洁高效的交互体验，同时增强了结果保存的灵活性。
+
+## 🚀 即将推出：未来感前端页面
+
+我们正在开发具有未来感的前端界面，将为Nexus财务智能体带来全新的用户体验：
+
+### 🎨 界面特色
+- **现代化UI设计**：采用最新的设计语言，简洁而富有科技感
+- **响应式布局**：完美适配桌面、平板和移动设备
+- **实时数据更新**：动态展示财务分析过程和结果
+- **交互式图表**：丰富的可视化组件，支持钻取和筛选
+- **智能推荐**：基于用户行为的个性化分析建议
+
+### 🛠️ 技术栈
+- **前端框架**：React + TypeScript
+- **UI组件库**：Ant Design / Material-UI
+- **数据可视化**：ECharts / D3.js
+- **状态管理**：Redux Toolkit / Zustand
+- **构建工具**：Vite / Next.js
+
+### 📱 功能预览
+- **智能搜索**：快速查找和选择分析目标
+- **分析仪表板**：一目了然的财务健康状态
+- **对比分析**：多公司、多维度对比展示
+- **报告生成**：一键生成专业分析报告
+- **历史记录**：分析历史和趋势追踪
+
+敬请期待我们的前端页面发布，体验更加智能、直观的财务分析！**即将推出，敬请期待！** 🚀✨
