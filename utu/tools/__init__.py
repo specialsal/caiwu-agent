@@ -5,6 +5,7 @@ from .base import AsyncBaseToolkit as AsyncBaseToolkit, register_tool as registe
 from .bash_remote_tool import BashRemoteToolkit
 from .bash_toolkit import BashToolkit
 from .codesnip_toolkit import CodesnipToolkit
+from .datetime_toolkit import DateTimeToolkit
 from .document_toolkit import DocumentToolkit
 from .file_edit_toolkit import FileEditToolkit
 from .github_toolkit import GitHubToolkit
@@ -26,6 +27,8 @@ from .financial_analysis_toolkit import StandardFinancialAnalyzer
 from .enhanced_python_executor_toolkit import EnhancedPythonExecutorToolkit
 # 添加报告保存工具包的导入
 from .report_saver_toolkit import ReportSaverToolkit
+# 添加增强图表生成工具包的导入
+from .enhanced_chart_generator import EnhancedChartGenerator
 
 TOOLKIT_MAP = {
     "search": SearchToolkit,
@@ -44,6 +47,8 @@ TOOLKIT_MAP = {
     "serper": SerperToolkit,
     "tabular": TabularDataToolkit,
     "memory_simple": SimpleMemoryToolkit,
+    # 添加DateTime工具包到映射中
+    "datetime": DateTimeToolkit,
     # 添加AKShare财务数据工具包到映射中
     "akshare_financial_data": AKShareFinancialDataTool,
     # 添加财务分析工具包到映射中
@@ -52,6 +57,8 @@ TOOLKIT_MAP = {
     "enhanced_python_executor": EnhancedPythonExecutorToolkit,
     # 添加报告保存工具包到映射中
     "report_saver": ReportSaverToolkit,
+    # 添加增强图表生成工具包到映射中
+    "enhanced_chart_generator": EnhancedChartGenerator,
 }
 
 def get_toolkits_map(names: list[str] | None = None) -> dict[str, AsyncBaseToolkit]:
