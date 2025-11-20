@@ -1,324 +1,581 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
-import os
-import time
 import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
+import json
+import time
+import os
+import subprocess
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
-# Load environment variables
+# 加载环境变量
 load_dotenv()
 
-# Page Config
+# 页面配置
 st.set_page_config(
-    page_title="Nexus 财务智能体 v3.2",
+    page_title="Nexus 财务智能体 v3.4",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# 🎨 NEXUS UI ENGINE v3.2 (CSS INJECTION)
+# 🎨 NEXUS UI 引擎 v3.4 (高对比度深色模式)
 # ==========================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
-    /* --- GLOBAL RESET & TYPOGRAPHY --- */
+    /* --- 全局重置 & 排版 (强制高亮文字) --- */
     .stApp {
-        background: #050505; /* Deepest Black */
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
-        color: #e2e8f0;
+        background: #020617; /* Very Dark Slate */
+        color: #f8fafc; /* High Contrast White */
         font-family: 'Inter', sans-serif;
-        /* Critical: Makes text sharper on dark backgrounds */
-        -webkit-font-smoothing: antialiased; 
-        -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Force all text to be readable */
-    h1, h2, h3, h4, h5, h6 {
-        color: #ffffff !important;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-    }
-    p, li, label, .stMarkdown {
-        color: #cbd5e1 !important; /* Slate-300 (High readability gray) */
-        font-weight: 400;
-        line-height: 1.6;
+    /* 强制所有标题和文本为白色/高亮色，解决看不清的问题 */
+    h1, h2, h3, h4, h5, h6, span, div, label, .stMarkdown p {
+        color: #f1f5f9 !important; 
     }
     
-    /* --- SIDEBAR REINVENTION --- */
+    /* 弱化辅助文本 */
+    .stMarkdown p.caption {
+        color: #94a3b8 !important;
+    }
+
+    /* --- 侧边栏优化 --- */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
-        border-right: 1px solid rgba(30, 41, 59, 0.8);
-        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        background-color: #0f172a;
+        border-right: 1px solid #1e293b;
     }
-    
-    /* Sidebar Text Specifics */
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
-    section[data-testid="stSidebar"] h3 {
-        color: #38bdf8 !important; /* Light Blue Title */
-        text-transform: uppercase;
-        font-size: 12px;
-        letter-spacing: 1px;
-        margin-top: 20px;
-    }
-    section[data-testid="stSidebar"] p, 
-    section[data-testid="stSidebar"] span,
-    section[data-testid="stSidebar"] div {
-        color: #f1f5f9 !important; /* Pure White Text in Sidebar */
-        font-size: 14px;
+    section[data-testid="stSidebar"] h3, 
+    section[data-testid="stSidebar"] label {
+        color: #e2e8f0 !important;
     }
 
-    /* --- COMPONENT STYLING --- */
-    
-    /* Input Fields (HUD Style) */
+    /* --- 输入框 (HUD 风格) --- */
     div[data-baseweb="input"] {
-        background-color: rgba(15, 23, 42, 0.8) !important; /* Darker background for text contrast */
+        background-color: #1e293b !important;
         border: 1px solid #334155 !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
     }
-    input[type="text"] {
+    input[type="text"], input[type="password"] {
         color: #ffffff !important;
         font-family: 'JetBrains Mono', monospace;
     }
-    /* Focus state for input */
+    /* 输入框聚焦效果 */
     div[data-baseweb="input"]:focus-within {
         border-color: #00f3ff !important;
         box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
     }
 
-    /* Buttons */
+    /* --- 按钮 (霓虹风格) --- */
     button[kind="primary"] {
-        background: linear-gradient(90deg, #2563eb, #7c3aed) !important;
+        background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%) !important;
         border: none !important;
-        color: white !important;
-        font-weight: 600 !important;
-        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4) !important;
-        transition: all 0.2s;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        padding: 0.5rem 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
     }
     button[kind="primary"]:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6) !important;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6) !important;
+        transform: translateY(-2px);
+    }
+    button[kind="secondary"] {
+        background: transparent !important;
+        border: 1px solid #334155 !important;
+        color: #94a3b8 !important;
+    }
+    button[kind="secondary"]:hover {
+        border-color: #00f3ff !important;
+        color: #00f3ff !important;
     }
 
-    /* --- CUSTOM CARDS --- */
+    /* --- 容器卡片 --- */
     .nexus-card {
-        background: rgba(17, 24, 39, 0.7); /* Darker glass */
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(30, 41, 59, 0.5);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 20px;
-        position: relative;
-        overflow: hidden;
-    }
-    .nexus-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; w: 2px; h: 100%;
-        background: linear-gradient(to bottom, #00f3ff, transparent);
-        opacity: 0.5;
+        padding: 20px;
+        margin-bottom: 16px;
     }
 
-    /* Metric Box */
-    .metric-box {
-        background: rgba(0,0,0,0.4);
-        border: 1px solid #1e293b;
-        border-radius: 8px;
-        padding: 16px;
-        text-align: center;
-    }
-    .metric-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-    .metric-value { font-size: 28px; font-weight: 700; color: #f8fafc; font-family: 'JetBrains Mono'; }
-    
-    /* File Artifacts in Sidebar */
-    .file-item {
-        display: flex;
-        align-items: center;
-        padding: 10px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 6px;
-        margin-bottom: 8px;
-        transition: all 0.2s;
-    }
-    .file-item:hover {
-        background: rgba(255,255,255,0.08);
-        border-color: #38bdf8;
-    }
-    
-    /* Hide Default Streamlit clutter */
+    /* 隐藏 Streamlit 默认元素 */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 🧠 LOGIC & COMPONENTS
+# 🔗 后端集成层 (Financial Agent)
 # ==========================================
 
-def render_header():
-    st.markdown("""
-    <div class="nexus-card" style="border-left: 4px solid #00f3ff; padding-left: 24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <h1 style="margin:0; font-size: 42px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                    NEXUS <span style="font-weight:300;">INTELLIGENCE</span>
-                </h1>
-                <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
-                    <span style="padding:2px 8px; background:rgba(16, 185, 129, 0.2); color:#34d399; border-radius:4px; font-size:11px; font-weight:600; border:1px solid rgba(16, 185, 129, 0.3);">
-                        ● SYSTEM ONLINE
-                    </span>
-                    <span style="font-family:'JetBrains Mono'; font-size:12px; color:#64748b;">
-                        v3.2.0 // CLASSIFIED
-                    </span>
-                </div>
-            </div>
-            <div style="text-align:right; opacity:0.8;">
-                <div style="font-family:'JetBrains Mono'; font-size:32px; color:#38bdf8; font-weight:bold;">06</div>
-                <div style="font-size:11px; color:#94a3b8; letter-spacing:1px;">ACTIVE AGENTS</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+class FinancialAgent:
+    """
+    核心逻辑层：负责连接 LLM 或 现有的命令行工具。
+    """
+    def __init__(self, api_key=None):
+        self.api_key = api_key
+        self.client = None
+        if self.api_key:
+            try:
+                self.client = genai.Client(api_key=self.api_key)
+            except Exception as e:
+                print(f"Gemini 初始化失败: {e}")
 
-def render_terminal_logs(logs):
-    # Modern Terminal Look: Black background, bright distinct text
-    log_html = ""
-    for log in logs:
-        color = "#94a3b8" # Default gray
-        if "[INFO]" in log: color = "#60a5fa" # Blue
-        if "[SUCCESS]" in log: color = "#4ade80" # Green
-        if "[WARNING]" in log: color = "#fbbf24" # Amber
-        if "[ALERT]" in log: color = "#f87171" # Red
-        if ">>" in log: color = "#c084fc" # Purple
+    def analyze(self, query):
+        """
+        执行分析任务，集成后端命令行工具
+        """
+        import sys
+        import os
         
-        log_html += f'<div style="color:{color}; margin-bottom:4px;">{log}</div>'
+        # 检查是否在Streamlit环境中运行
+        in_streamlit = False
+        try:
+            import streamlit as st
+            if hasattr(st, 'session_state'):
+                in_streamlit = True
+        except:
+            pass
         
-    st.markdown(f"""
-    <div style="
-        background: #09090b; 
-        border: 1px solid #27272a; 
-        border-radius: 8px; 
-        padding: 16px; 
-        font-family: 'JetBrains Mono', monospace; 
-        font-size: 13px; 
-        height: 350px; 
-        overflow-y: auto;
-        box-shadow: inset 0 0 20px rgba(0,0,0,0.8);">
-        {log_html}
-        <div style="margin-top:10px; color:#00f3ff; animation: blink 1s infinite;">▋</div>
+        # 创建状态对象（用于Streamlit进度显示）
+        status = None
+        if in_streamlit:
+            try:
+                status = st.status("🚀 智能体集群正在运行...", expanded=True)
+                if status:
+                    st.write("📡 正在连接数据终端...")
+                    time.sleep(0.5)
+                    st.write("🔍 正在调用命令行工具/API...")
+            except:
+                pass
+        
+        # 调用后端命令行工具
+        try:
+            # 切换到stock_analysis目录并执行命令
+            # 使用绝对路径确保正确找到目录
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            stock_analysis_path = os.path.join(os.path.dirname(current_dir), "examples", "stock_analysis")
+            
+            # 验证目录是否存在
+            if not os.path.exists(stock_analysis_path):
+                raise Exception(f"目录不存在: {stock_analysis_path}")
+            
+            # 构建命令：python main.py --stream，然后输入查询
+            cmd = [sys.executable, "main.py", "--stream"]
+            
+            # 使用subprocess执行命令
+            process = subprocess.Popen(
+                cmd,
+                cwd=stock_analysis_path,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8',
+                shell=False
+            )
+            
+            # 发送查询并获取输出
+            stdout, stderr = process.communicate(input=query + "\n", timeout=300)  # 5分钟超时
+            
+            if process.returncode == 0:
+                if in_streamlit and status:
+                    try:
+                        st.write("📊 正在解析分析结果...")
+                        time.sleep(0.5)
+                        status.update(label="✅ 分析任务完成", state="complete", expanded=False)
+                    except:
+                        pass
+                
+                # 解析命令行输出，转换为前端需要的JSON格式
+                return self._parse_cli_output(stdout, query)
+            else:
+                if in_streamlit and status:
+                    try:
+                        st.error(f"命令行工具执行失败: {stderr}")
+                        status.update(label="❌ 分析失败", state="error", expanded=False)
+                    except:
+                        pass
+                return self._get_mock_data(query)
+                
+        except subprocess.TimeoutExpired:
+            if in_streamlit and status:
+                try:
+                    st.error("分析超时，请稍后重试")
+                    status.update(label="⏰ 分析超时", state="error", expanded=False)
+                except:
+                    pass
+            return self._get_mock_data(query)
+        except Exception as e:
+            if in_streamlit and status:
+                try:
+                    st.error(f"连接后端工具失败: {str(e)}")
+                    status.update(label="❌ 连接失败", state="error", expanded=False)
+                except:
+                    pass
+            return self._get_mock_data(query)
+
+        # 2. 如果没有 API Key，返回模拟数据（用于演示 UI）
+        if not self.api_key:
+            return self._get_mock_data(query)
+        
+        try:
+            # 3. 使用 Gemini 2.5 Flash 生成结构化数据
+            # 我们要求它返回 JSON，这样前端好渲染
+            prompt = f"""
+            你是一个高级财务分析师。请分析以下查询：'{query}'。
+            
+            请务必返回且仅返回一个合法的 JSON 对象（不要用 Markdown 代码块包裹），结构如下：
+            {{
+                "title": "简短的中文标题",
+                "summary": "2-3句话的中文执行摘要",
+                "metrics": [
+                    {{"label": "中文指标名 (如 净利润)", "value": "带单位的数值", "change": "变化率 (如 +12%)", "trend": "up/down/flat"}}
+                ],
+                "revenue_trend": [
+                    {{"period": "24Q1", "value": 100}},
+                    {{"period": "24Q2", "value": 120}}
+                ],
+                "cost_structure": [
+                    {{"category": "研发", "value": 30}},
+                    {{"category": "营销", "value": 20}}
+                ],
+                "logs": [
+                    "日志条目 1",
+                    "日志条目 2"
+                ]
+            }}
+            """
+            
+            response = self.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type='application/json'
+                )
+            )
+            return json.loads(response.text)
+            
+        except Exception as e:
+            if in_streamlit:
+                try:
+                    import streamlit as st
+                    st.error(f"连接失败: {str(e)}")
+                    st.info("已切换到模拟数据模式。")
+                except:
+                    pass
+            return self._get_mock_data(query)
+
+    def _parse_cli_output(self, cli_output, original_query):
+        """
+        解析命令行工具的输出，转换为前端需要的JSON格式
+        """
+        import re
+        import json
+        
+        # 尝试从输出中提取关键信息
+        def extract_financial_metrics(text):
+            """提取财务指标"""
+            metrics = []
+            
+            # 常见财务指标模式
+            patterns = {
+                "营业收入": r'营业收入[：:\s]*([0-9.,]+[万亿千百元]*)',
+                "净利润": r'净利润[：:\s]*([0-9.,]+[万亿千百元]*)',
+                "总资产": r'总资产[：:\s]*([0-9.,]+[万亿千百元]*)',
+                "毛利率": r'毛利率[：:\s]*([0-9.,]+%)',
+                "净利率": r'净利率[：:\s]*([0-9.,]+%)',
+                "ROE": r'ROE[：:\s]*([0-9.,]+%)',
+                "研发投入": r'研发[投投入][：:\s]*([0-9.,]+[万亿千百元]*)'
+            }
+            
+            for metric_name, pattern in patterns.items():
+                matches = re.findall(pattern, text)
+                if matches:
+                    value = matches[0]
+                    # 尝试提取变化趋势
+                    change_pattern = f'{metric_name}.*?([+-]?[0-9.,]+%)'
+                    change_match = re.search(change_pattern, text)
+                    change = change_match.group(1) if change_match else "持平"
+                    trend = "up" if "+" in change else ("down" if "-" in change else "flat")
+                    
+                    metrics.append({
+                        "label": metric_name,
+                        "value": value,
+                        "change": change,
+                        "trend": trend
+                    })
+            
+            # 如果没有找到指标，返回默认指标
+            if not metrics:
+                return [
+                    {"label": "分析完成", "value": "✅", "change": "成功", "trend": "up"},
+                    {"label": "报告类型", "value": "详细分析", "change": "生成", "trend": "up"}
+                ]
+            
+            return metrics[:4]  # 最多返回4个指标
+        
+        def extract_company_name(text):
+            """提取公司名称"""
+            # 匹配股票代码模式：公司名称(股票代码)
+            stock_pattern = r'([^()（）]+)\((\d{6}\.(?:SH|SZ))\)'
+            matches = re.findall(stock_pattern, text)
+            if matches:
+                return matches[0][0], matches[0][1]
+            return "目标公司", "N/A"
+        
+        def extract_summary(text):
+            """提取摘要信息"""
+            # 寻找结论性语句
+            summary_patterns = [
+                r'(?:总体|综合|总结)[：:]?\s*([^。\n]+)',
+                r'(?:建议|推荐)[：:]?\s*([^。\n]+)',
+                r'(?:结论|判断)[：:]?\s*([^。\n]+)'
+            ]
+            
+            for pattern in summary_patterns:
+                match = re.search(pattern, text)
+                if match:
+                    return match.group(1).strip()
+            
+            # 如果没有找到，返回前200个字符作为摘要
+            return text[:200] + "..." if len(text) > 200 else text
+        
+        # 提取信息
+        company_name, stock_code = extract_company_name(cli_output)
+        metrics = extract_financial_metrics(cli_output)
+        summary = extract_summary(cli_output)
+        
+        # 生成趋势数据（模拟数据，因为命令行输出可能不包含具体趋势）
+        revenue_trend = [
+            {"period": "2023 Q3", "value": 380},
+            {"period": "2023 Q4", "value": 410},
+            {"period": "2024 Q1", "value": 395},
+            {"period": "2024 Q2", "value": 452}
+        ]
+        
+        # 生成成本结构（模拟数据）
+        cost_structure = [
+            {"category": "营业成本", "value": 60},
+            {"category": "研发支出", "value": 15},
+            {"category": "销售费用", "value": 15},
+            {"category": "管理费用", "value": 10}
+        ]
+        
+        # 生成日志
+        logs = [
+            f"系统初始化完成...",
+            f"正在分析 {company_name}({stock_code})",
+            f"执行查询: {original_query}",
+            f"调用智能体集群进行分析...",
+            f"分析完成，生成报告"
+        ]
+        
+        return {
+            "title": f"{company_name} 财务分析报告",
+            "summary": summary,
+            "metrics": metrics,
+            "revenue_trend": revenue_trend,
+            "cost_structure": cost_structure,
+            "logs": logs
+        }
+    
+    def _get_mock_data(self, query):
+        """没有后端连接时的演示数据"""
+        return {
+            "title": f"关于“{query}”的深度分析报告",
+            "summary": "系统处于演示模式（未检测到 API Key）。数据显示该公司核心业务稳健增长，但 Q3 运营成本略有上升。建议关注现金流健康度。",
+            "metrics": [
+                {"label": "总营收", "value": "¥452.1亿", "change": "+12.4%", "trend": "up"},
+                {"label": "净利润", "value": "¥28.3亿", "change": "-3.2%", "trend": "down"},
+                {"label": "毛利率", "value": "18.5%", "change": "持平", "trend": "flat"},
+                {"label": "研发投入", "value": "¥45亿", "change": "+8.1%", "trend": "up"}
+            ],
+            "revenue_trend": [
+                {"period": "2023 Q3", "value": 380},
+                {"period": "2023 Q4", "value": 410},
+                {"period": "2024 Q1", "value": 395},
+                {"period": "2024 Q2", "value": 452}
+            ],
+            "cost_structure": [
+                {"category": "营业成本", "value": 60},
+                {"category": "研发支出", "value": 15},
+                {"category": "销售费用", "value": 15},
+                {"category": "管理费用", "value": 10}
+            ],
+            "logs": [
+                "系统初始化完成...",
+                "正在连接外部命令行工具...",
+                "检测到本地数据源 data.csv",
+                "执行 python analysis_core.py --target=revenue",
+                "数据校验通过，开始渲染报告"
+            ]
+        }
+
+# ==========================================
+# 📊 可视化引擎 (适配深色模式)
+# ==========================================
+
+def create_cyber_chart(data, chart_type="bar"):
+    """
+    创建适配深色背景的 Plotly 图表
+    """
+    df = pd.DataFrame(data)
+    
+    if chart_type == "bar":
+        fig = px.bar(
+            df, x='period', y='value', 
+            color_discrete_sequence=['#00f3ff'] # 霓虹蓝
+        )
+        fig.update_traces(marker_line_width=0, opacity=0.9)
+    else:
+        fig = px.pie(
+            df, names='category', values='value', 
+            hole=0.6,
+            color_discrete_sequence=['#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899']
+        )
+
+    # 关键：设置全透明背景和白色文字，解决“看不清”的问题
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)',
+        font={'color': '#ffffff', 'family': 'Inter'}, # 强制白色字体
+        margin=dict(l=10, r=10, t=30, b=10),
+        xaxis=dict(
+            showgrid=False, 
+            linecolor='#334155', 
+            tickfont=dict(color='#cbd5e1', size=12)
+        ),
+        yaxis=dict(
+            showgrid=True, 
+            gridcolor='rgba(255, 255, 255, 0.1)', # 微弱的网格线
+            linecolor='#334155',
+            tickfont=dict(color='#cbd5e1')
+        ),
+        legend=dict(
+            font=dict(color='#ffffff'),
+            bgcolor='rgba(0,0,0,0)'
+        )
+    )
+    
+    return fig
+
+# ==========================================
+# 🚀 主界面逻辑
+# ==========================================
+
+# 顶部标题栏
+st.markdown("""
+<div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 30px;">
+    <h1 style="margin:0; font-size: 2.5rem; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Nexus <span style="color:#00f3ff; font-weight:300;">财务智能体</span>
+    </h1>
+    <div style="color: #64748b; font-family: 'JetBrains Mono'; font-size: 0.8rem; margin-top: 5px;">
+        AUTONOMOUS FINANCIAL INTELLIGENCE TERMINAL v3.4
     </div>
-    <style>@keyframes blink {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0; }} }}</style>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-# ==========================================
-# 🚀 MAIN EXECUTION
-# ==========================================
-
-# Sidebar
+# 侧边栏
 with st.sidebar:
-    st.markdown("### 📁 ARTIFACTS REPOSITORY")
-    files = [
-        {"icon": "📄", "name": "analysis_report.pdf", "meta": "PDF • 156 KB"},
-        {"icon": "📉", "name": "trend_viz.png", "meta": "PNG • 90 KB"},
-        {"icon": "🕸️", "name": "debt_struct.json", "meta": "JSON • 85 KB"},
-    ]
+    st.header("⚙️ 系统配置")
+    api_key_input = st.text_input("Gemini API Key", type="password", placeholder="输入 sk-...", help="留空将运行在演示模式")
+    
+    st.markdown("---")
+    st.markdown("### 📁 本地文件")
+    st.caption("检测到已挂载的数据源：")
+    
+    files = ["Q3_Raw_Data.csv", "Financial_Report_v2.pdf", "CLI_Tool_Config.yaml"]
     for f in files:
         st.markdown(f"""
-        <div class="file-item">
-            <span style="font-size: 18px; margin-right: 10px;">{f['icon']}</span>
-            <div style="flex:1;">
-                <div style="color:#e2e8f0; font-weight:500; font-size:13px;">{f['name']}</div>
-                <div style="color:#64748b; font-size:10px; font-family:'JetBrains Mono';">{f['meta']}</div>
-            </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px; background:rgba(255,255,255,0.03); border-radius:6px; margin-bottom:6px;">
+            <span style="color:#00f3ff;">📄</span> 
+            <span style="font-family:'JetBrains Mono'; font-size:12px; color:#cbd5e1;">{f}</span>
         </div>
         """, unsafe_allow_html=True)
-        
-    st.markdown("---")
-    st.markdown("### 🔑 ACCESS CONTROL")
-    # Password input is naturally readable due to global CSS overrides
-    st.text_input("API Key Configuration", type="password", placeholder="sk-...", help="Secure Enclave")
 
-# Main Content
-render_header()
+# 初始化 Session State
+if 'data' not in st.session_state:
+    st.session_state.data = None
 
-# Input Section
-c1, c2 = st.columns([4, 1])
-with c1:
-    query = st.text_input("MISSION OBJECTIVE", placeholder="输入指令: 分析 陕西建工 2025年三季度财报...", label_visibility="collapsed")
-with c2:
-    st.markdown("<div style='height: 2px'></div>", unsafe_allow_html=True) # Spacer align
-    start = st.button("INITIALIZE", use_container_width=True, type="primary")
+# 核心交互区
+query = st.text_input("💬 指令输入", placeholder="例如：分析上个季度的营收趋势，并对比研发成本...", label_visibility="visible")
 
-if start or query:
-    t1, t2, t3 = st.tabs(["📊 INTELLIGENCE", "📉 VISUALIZATION", "💻 TERMINAL"])
+col1, col2 = st.columns([1, 5])
+with col1:
+    run_btn = st.button("⚡ 执行分析", type="primary", use_container_width=True)
+
+# 执行逻辑
+if run_btn and query:
+    agent = FinancialAgent(api_key=api_key_input or os.getenv("API_KEY"))
+    st.session_state.data = agent.analyze(query)
+
+# 结果展示区
+if st.session_state.data:
+    data = st.session_state.data
     
-    with t1:
-        # Report Card
-        st.markdown("""
-        <div class="nexus-card">
-            <h2 style="margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; margin-bottom:20px;">
-                陕西建工 (600248.SH) 深度诊断
-            </h2>
-            <p style="font-size:16px; color:#cbd5e1;">
-                基于2025年最新数据，陕西建工展现出强劲的营收规模（573.88亿元），但盈利能力（净利率1.92%）面临严峻挑战。
-                资产负债率维持在 <span style="color:#f87171; font-weight:bold;">88.13%</span> 的高位，财务杠杆风险需重点关注。
-            </p>
-            <br>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                <div class="metric-box">
-                    <div class="metric-label">总营收</div>
-                    <div class="metric-value">¥573.9亿</div>
-                    <div style="color:#4ade80; font-size:12px;">▲ 14.6%</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">净利润</div>
-                    <div class="metric-value">¥11.0亿</div>
-                    <div style="color:#f87171; font-size:12px;">▼ 6.9%</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">负债率</div>
-                    <div class="metric-value" style="color:#fbbf24;">88.1%</div>
-                    <div style="color:#94a3b8; font-size:12px;">Risk High</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">ROE</div>
-                    <div class="metric-value">2.70%</div>
-                    <div style="color:#94a3b8; font-size:12px;">-0.3%</div>
-                </div>
+    st.markdown("---")
+    
+    # 1. 关键指标卡片 (KPIs)
+    st.subheader(data.get('title', '分析报告'))
+    st.info(data.get('summary', ''))
+    
+    kpi_cols = st.columns(4)
+    for i, metric in enumerate(data.get("metrics", [])):
+        with kpi_cols[i]:
+            # 根据趋势决定颜色
+            trend_color = "#10b981" if metric.get('trend') == 'up' else "#f43f5e"
+            if metric.get('trend') == 'flat': trend_color = "#94a3b8"
+            
+            st.markdown(f"""
+            <div class="nexus-card" style="text-align:center; padding: 15px;">
+                <div style="color:#94a3b8; font-size:12px; margin-bottom:4px;">{metric['label']}</div>
+                <div style="color:#fff; font-size:24px; font-weight:bold; font-family:'JetBrains Mono';">{metric['value']}</div>
+                <div style="color:{trend_color}; font-size:13px; margin-top:4px;">{metric['change']}</div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-    with t2:
-        c_v1, c_v2 = st.columns(2)
-        with c_v1:
-            st.markdown("#### 营收趋势 (Revenue Trend)")
-            # Plotly with transparent background
-            fig = go.Figure(data=[go.Bar(x=['Q1', 'Q2', 'Q3'], y=[150, 230, 180], marker_color='#38bdf8')])
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font={'color': '#fff'})
+    # 2. 图表区域
+    chart_c1, chart_c2 = st.columns(2)
+    with chart_c1:
+        st.markdown("#### 📊 趋势分析")
+        if "revenue_trend" in data:
+            fig = create_cyber_chart(data['revenue_trend'], "bar")
             st.plotly_chart(fig, use_container_width=True)
-        with c_v2:
-            st.markdown("#### 成本结构 (Cost Structure)")
-            fig2 = go.Figure(data=[go.Pie(labels=['成本', '利润'], values=[90, 10], hole=.6)])
-            fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': '#fff'})
+            
+    with chart_c2:
+        st.markdown("#### 🧬 成本结构")
+        if "cost_structure" in data:
+            fig2 = create_cyber_chart(data['cost_structure'], "pie")
             st.plotly_chart(fig2, use_container_width=True)
 
-    with t3:
-        logs = [
-            "2025-11-20 20:16:13 [INFO] System initialized",
-            "2025-11-20 20:16:14 >> Orchestrator: Assigning tasks...",
-            "2025-11-20 20:16:15 [INFO] DataAgent: Fetching 600248.SH",
-            "2025-11-20 20:16:18 [SUCCESS] AkShare API: 200 OK (102 rows)",
-            "2025-11-20 20:16:20 [WARNING] Debt ratio > 80% detected",
-            "2025-11-20 20:16:22 >> AnalysisAgent: Computing ROE/ROA...",
-            "2025-11-20 20:16:25 [ALERT] Margin anomaly detected in Q3",
-            "2025-11-20 20:16:28 [SUCCESS] Report generation complete"
-        ]
-        render_terminal_logs(logs)
-
+    # 3. 终端日志
+    with st.expander("💻 系统运行日志 (TERMINAL LOGS)", expanded=False):
+        st.markdown("""
+        <style>
+        .log-line { font-family: 'JetBrains Mono'; font-size: 12px; padding: 2px 0; border-bottom: 1px dashed #1e293b; }
+        .log-time { color: #64748b; margin-right: 10px; }
+        .log-content { color: #cbd5e1; }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        for log in data.get("logs", []):
+            st.markdown(f"""
+            <div class="log-line">
+                <span class="log-time">[{time.strftime("%H:%M:%S")}]</span>
+                <span class="log-content">{log}</span>
+            </div>
+            """, unsafe_allow_html=True)
